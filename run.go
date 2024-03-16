@@ -9,25 +9,25 @@ import (
 )
 
 // Create a new [DockerRun] instance.
-func (d *Docker) Run(image, command string, args ...string) (*DockerRun, error) {
-	if len(image) == 0 {
-		return nil, fmt.Errorf("%w: missing image", ErrRequiredParam)
-	}
-	return &DockerRun{
+func (d *DockerRef) Run(image string, args ...string) *DockerRun {
+	r := &DockerRun{
 		d:             d,
 		image:         image,
-		command:       command,
 		args:          args,
 		restartPolicy: RestartNever,
-	}, nil
+	}
+	if len(image) == 0 {
+		r.err = fmt.Errorf("%w: missing image", ErrRequiredParam)
+	}
+	return r
 }
 
 // DockerRun encapsulates a "docker run" command.
 // It's created from a Docker instance.
 type DockerRun struct {
-	d               *Docker
+	d               *DockerRef
 	name            string
-	image, command  string
+	image           string
 	args            []string
 	err             error
 	hostname        string
@@ -258,9 +258,6 @@ func (r *DockerRun) Run(ctx context.Context) error {
 	}
 
 	args = append(args, r.image)
-	if len(r.command) > 0 {
-		args = append(args, r.command)
-	}
 	if len(r.args) > 0 {
 		args = append(args, r.args...)
 	}

@@ -12,19 +12,19 @@ var (
 	ErrRequiredParam = errors.New("missing required parameter")
 )
 
-// Docker is a reference to the Docker CLI, that can then be used to run commands.
-type Docker struct {
+// DockerRef is a reference to the DockerRef CLI, that can then be used to run commands.
+type DockerRef struct {
 	exePath PathString
 }
 
-// NewDocker will attempt to locate the Docker CLI, and return a Docker if successful.
+// Docker will attempt to locate the Docker CLI, and return a DockerRef if successful.
 // If the Docker CLI cannot be located from the PATH, then ErrNoDockerFound will be returned.
-func NewDocker() (*Docker, error) {
+func Docker() *DockerRef {
 	_path, err := exec.LookPath("docker")
 	if err != nil {
-		return nil, ErrNoDockerFound
+		panic(ErrNoDockerFound)
 	}
-	return &Docker{
+	return &DockerRef{
 		exePath: Path(_path),
-	}, nil
+	}
 }
