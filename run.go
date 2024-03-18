@@ -214,7 +214,7 @@ func (r *DockerRun) Run(ctx context.Context) error {
 	if r.err != nil {
 		return r.err
 	}
-	args := []string{r.d.exePath.String(), "run"}
+	args := []string{"run"}
 	if len(r.name) > 0 {
 		args = append(args, "--name="+r.name)
 	}
@@ -265,6 +265,6 @@ func (r *DockerRun) Run(ctx context.Context) error {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
-		return Exec(args...).CaptureStdin().Run(ctx)
+		return r.d.Command(args...).Run(ctx)
 	}
 }
