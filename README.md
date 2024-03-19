@@ -81,7 +81,7 @@ Next, we need to update our Modmake build to include the step to build our image
  func main() {
  	b := NewBuild()
  
-+   // Make sure dependencies are present in container.
++	// Make sure dependencies are present in container.
 +	b.Generate().Does(Go().ModTidy())
  	b.Test().Does(Go().TestAll())
  	b.Build().Does(Go().Build("./cmd/my-app"))
@@ -112,7 +112,7 @@ A dependency is expressed on the `package-docker` step to make sure it's always 
  
 +	runDocker := NewStep("run-docker", "Runs the Docker container built from package-docker").
 +		Does(Docker().Run("test-project:latest").RemoveAfterExit()).
-+       // Make this depend on 'run-docker'
++		// Make this depend on 'run-docker'
 +		DependsOn(pkgDocker)
 +	b.AddStep(runDocker)
 +
@@ -145,37 +145,37 @@ import (
 )
 
 func main() {
-    // It's good practice to add variables that make the build easily configurable.
-    var (
-        // Uses Modmake's PathString for portable paths.
-        // All Modmake PathStrings expect forward slashes regardless of OS.
-        appPath = Path("./cmd/my-app")
-        // Uses Modmake's F strings for environment variable interpolation.
-        // This will default to 'test-project:local' if 'IMAGE_TAG' is empty/undefined.
-        imageName = F("test-project:${IMAGE_TAG:local}")
-    )
+	// It's good practice to add variables that make the build easily configurable.
+	var (
+		// Uses Modmake's PathString for portable paths.
+		// All Modmake PathStrings expect forward slashes regardless of OS.
+		appPath = Path("./cmd/my-app")
+		// Uses Modmake's F strings for environment variable interpolation.
+		// This will default to 'test-project:local' if 'IMAGE_TAG' is empty/undefined.
+		imageName = F("test-project:${IMAGE_TAG:local}")
+	)
 
 	b := NewBuild()
 
 	b.Test().Does(Go().TestAll())
-    // Build the application
+	// Build the application
 	b.Build().Does(Go().Build(appPath))
 
-    // Create a Docker sub-build.
-    docker := NewBuild()
-    // Do 'go mod tidy' to ensure dependencies are available during image build.
+	// Create a Docker sub-build.
+	docker := NewBuild()
+	// Do 'go mod tidy' to ensure dependencies are available during image build.
 	docker.Generate().Does(Go().ModTidy())
-    // Build the image using the default 'build' step.
-    docker.Build().Does(Docker().Build(imageName, ""))
-    // Run the image after building it with a custom step.
-    docker.NewStep("run", "Runs my-app in container").
-        Does(Docker().Run(imageName).RemoveAfterExit()).
-        DependsOn(docker.Step("build"))
-    // Import the sub-build into the base build with the prefix 'docker:'.
-    b.Import("docker", docker)
-    // Make sure that tests pass before building the image.
-    // This also means that tests must pass before running 'docker:run'
-    b.Step("docker:build").DependsOn("test")
+	// Build the image using the default 'build' step.
+	docker.Build().Does(Docker().Build(imageName, ""))
+	// Run the image after building it with a custom step.
+	docker.NewStep("run", "Runs my-app in container").
+		Does(Docker().Run(imageName).RemoveAfterExit()).
+		DependsOn(docker.Step("build"))
+	// Import the sub-build into the base build with the prefix 'docker:'.
+	b.Import("docker", docker)
+	// Make sure that tests pass before building the image.
+	// This also means that tests must pass before running 'docker:run'
+	b.Step("docker:build").DependsOn("test")
 
 	b.Execute()
 }
