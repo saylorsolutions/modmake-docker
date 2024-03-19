@@ -17,6 +17,8 @@ var (
 
 var _ error = (*DryRunResult)(nil)
 
+// DryRunResult is the error returned when [DockerRef.Command] executes with the dry run flag set.
+// All sub-commands use [DockerRef.Command], so using [Dry] will apply to all uses of a [DockerRef].
 type DryRunResult struct {
 	args []string
 }
@@ -31,6 +33,7 @@ func (r *DryRunResult) Error() string {
 	return fmt.Sprintf("dry run: docker " + strings.Join(r.args, " "))
 }
 
+// Args returns the arguments passed to [DockerRef.Command].
 func (r *DryRunResult) Args() []string {
 	return r.args
 }
@@ -53,11 +56,14 @@ func Docker() *DockerRef {
 	}
 }
 
+// Dry enables dry run mode for all subsequent use of this [DockerRef].
 func (d *DockerRef) Dry() *DockerRef {
 	d.dryRun = true
 	return d
 }
 
+// Command allows executing arbitrary Docker commands.
+// This is also used by all sub-commands.
 func (d *DockerRef) Command(args ...string) Task {
 	if d.dryRun {
 		return dryRunExec(args...)

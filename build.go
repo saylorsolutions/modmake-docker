@@ -9,6 +9,7 @@ import (
 	. "github.com/saylorsolutions/modmake"
 )
 
+// Build provides a method and options for building a Docker image.
 func (d *DockerRef) Build(image string, context PathString) *DockerBuild {
 	image = strings.TrimSpace(image)
 	if len(image) == 0 {
@@ -27,6 +28,8 @@ type DockerBuild struct {
 	labels    []string
 }
 
+// BuildArg sets a build argument for this image build.
+// These are distinct from environment variables.
 func (b *DockerBuild) BuildArg(key, value string) *DockerBuild {
 	if b.err != nil {
 		return b
@@ -35,6 +38,8 @@ func (b *DockerBuild) BuildArg(key, value string) *DockerBuild {
 	return b
 }
 
+// BuildFile specifies a Dockerfile for this build.
+// This is useful if the Dockerfile isn't named "Dockerfile" in the working context of the build.
 func (b *DockerBuild) BuildFile(filePath PathString) *DockerBuild {
 	if b.err != nil {
 		return b
@@ -43,6 +48,7 @@ func (b *DockerBuild) BuildFile(filePath PathString) *DockerBuild {
 	return b
 }
 
+// Label will set a metadata label in the built image.
 func (b *DockerBuild) Label(key, val string) *DockerBuild {
 	if b.err != nil {
 		return b
@@ -51,6 +57,7 @@ func (b *DockerBuild) Label(key, val string) *DockerBuild {
 	return b
 }
 
+// LabelBuildTimestamp will set a build time timestamp in the built image.
 func (b *DockerBuild) LabelBuildTimestamp() *DockerBuild {
 	if b.err != nil {
 		return b

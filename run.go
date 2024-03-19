@@ -8,7 +8,7 @@ import (
 	. "github.com/saylorsolutions/modmake"
 )
 
-// Create a new [DockerRun] instance.
+// Create a new [DockerRun] instance, used to run a container.
 func (d *DockerRef) Run(image string, args ...string) *DockerRun {
 	r := &DockerRun{
 		d:             d,
@@ -53,6 +53,7 @@ func (r *DockerRun) Detached() *DockerRun {
 	return r
 }
 
+// SetEnvVar will set an environment variable in the container when it's run.
 func (r *DockerRun) SetEnvVar(key, val string) *DockerRun {
 	if r.err != nil {
 		return r
@@ -62,6 +63,8 @@ func (r *DockerRun) SetEnvVar(key, val string) *DockerRun {
 	return r
 }
 
+// PublishPort will publish a port, mapping a host port to a container port.
+// These ports don't have to match.
 func (r *DockerRun) PublishPort(host, container int) *DockerRun {
 	if r.err != nil {
 		return r
@@ -74,6 +77,9 @@ func (r *DockerRun) PublishPort(host, container int) *DockerRun {
 	return r
 }
 
+// SetHostname will set a host name to be used in the running container.
+// Other containers may reference this container (assuming they're on the same network) using this host name.
+// By default, the container can be referenced by its container name.
 func (r *DockerRun) SetHostname(host string) *DockerRun {
 	if r.err != nil {
 		return r
@@ -87,6 +93,7 @@ func (r *DockerRun) SetHostname(host string) *DockerRun {
 	return r
 }
 
+// InteractiveTerminal will allow the specified command to be interactive, allocating a terminal to do so.
 func (r *DockerRun) InteractiveTerminal() *DockerRun {
 	if r.err != nil {
 		return r
@@ -95,6 +102,7 @@ func (r *DockerRun) InteractiveTerminal() *DockerRun {
 	return r
 }
 
+// Name will set the container name when started.
 func (r *DockerRun) Name(name string) *DockerRun {
 	if r.err != nil {
 		return r
@@ -103,6 +111,7 @@ func (r *DockerRun) Name(name string) *DockerRun {
 	return r
 }
 
+// ConnectNetwork will allow this container to communicate using the named network.
 func (r *DockerRun) ConnectNetwork(network string) *DockerRun {
 	if r.err != nil {
 		return r
@@ -116,6 +125,8 @@ func (r *DockerRun) ConnectNetwork(network string) *DockerRun {
 	return r
 }
 
+// PrivilegedContainer will run this container in "privileged" mode.
+// This should not be used unless specifically required by an image constraint, as it opens up the container host to possible security vulnerabilities.
 func (r *DockerRun) PrivilegedContainer() *DockerRun {
 	if r.err != nil {
 		return r
@@ -124,6 +135,7 @@ func (r *DockerRun) PrivilegedContainer() *DockerRun {
 	return r
 }
 
+// ReadOnlyFS will place the container's file system in read only mode.
 func (r *DockerRun) ReadOnlyFS() *DockerRun {
 	if r.err != nil {
 		return r
@@ -136,10 +148,10 @@ func (r *DockerRun) ReadOnlyFS() *DockerRun {
 type RestartPolicy string
 
 const (
-	RestartNever         RestartPolicy = "no"
-	RestartOnFailure     RestartPolicy = "on-failure"
-	RestartUnlessStopped RestartPolicy = "unless-stopped"
-	RestartAlways        RestartPolicy = "always"
+	RestartNever         RestartPolicy = "no"             // RestartNever will prevent the running container from restarting itself. This is the default.
+	RestartOnFailure     RestartPolicy = "on-failure"     // RestartOnFailure will perpetually restart the container when it exits with a non-zero exit code.
+	RestartUnlessStopped RestartPolicy = "unless-stopped" // RestartUnlessStopped will perpetually restart the container until it's explicitly stopped.
+	RestartAlways        RestartPolicy = "always"         // RestartAlways will always restart the container.
 )
 
 var knownRestartPolicies = map[RestartPolicy]struct{}{
@@ -149,6 +161,7 @@ var knownRestartPolicies = map[RestartPolicy]struct{}{
 	RestartAlways:        {},
 }
 
+// SetRestartPolicy will set a [RestartPolicy] for the running container.
 func (r *DockerRun) SetRestartPolicy(policy RestartPolicy) *DockerRun {
 	if r.err != nil {
 		return r
@@ -164,6 +177,7 @@ func (r *DockerRun) SetRestartPolicy(policy RestartPolicy) *DockerRun {
 	return r
 }
 
+// SetRestartRetries will set the [RestartOnFailure] policy, with the given number of retries.
 func (r *DockerRun) SetRestartRetries(retries int) *DockerRun {
 	if r.err != nil {
 		return r
@@ -177,6 +191,8 @@ func (r *DockerRun) SetRestartRetries(retries int) *DockerRun {
 	return r
 }
 
+// RemoveAfterExit will cause the container to be removed when it's stopped.
+// This is mutually exclusive with a [RestartPolicy].
 func (r *DockerRun) RemoveAfterExit() *DockerRun {
 	if r.err != nil {
 		return r
@@ -186,6 +202,7 @@ func (r *DockerRun) RemoveAfterExit() *DockerRun {
 	return r
 }
 
+// VolumeMount will mount a host path at a container path to allow reading/writing in the host file system.
 func (r *DockerRun) VolumeMount(hostPath, containerPath PathString) *DockerRun {
 	if r.err != nil {
 		return r
@@ -199,6 +216,7 @@ func (r *DockerRun) VolumeMount(hostPath, containerPath PathString) *DockerRun {
 	return r
 }
 
+// WorkingDirectory will set the working directory for the container entry point command.
 func (r *DockerRun) WorkingDirectory(containerPath PathString) *DockerRun {
 	if r.err != nil {
 		return r
