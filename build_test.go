@@ -12,21 +12,21 @@ func TestDockerBuild_Build(t *testing.T) {
 	ctx := context.Background()
 	err := Docker().Dry().Build("some-image:latest", ".").Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker build -t some-image:latest .", err.Error())
+	assert.Equal(t, "dry run: docker build -t some-image:latest .", err.Error())
 }
 
 func TestDockerBuild_Build_NoContext(t *testing.T) {
 	ctx := context.Background()
 	err := Docker().Dry().Build("some-image:latest", "").Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker build -t some-image:latest .", err.Error())
+	assert.Equal(t, "dry run: docker build -t some-image:latest .", err.Error())
 }
 
 func TestDockerBuild_Build_Context(t *testing.T) {
 	ctx := context.Background()
 	err := Docker().Dry().Build("some-image:latest", "./test_ctx").Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker build -t some-image:latest .", err.Error())
+	assert.Equal(t, "dry run: docker build -t some-image:latest .", err.Error())
 }
 
 func TestDockerBuild_BuildArg(t *testing.T) {
@@ -36,7 +36,7 @@ func TestDockerBuild_BuildArg(t *testing.T) {
 		BuildArg("a", "b").
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker build -t some-image:latest --build-arg c=d --build-arg a=b .", err.Error())
+	assert.Equal(t, "dry run: docker build -t some-image:latest --build-arg c=d --build-arg a=b .", err.Error())
 }
 
 func TestDockerBuild_BuildFileRelative(t *testing.T) {
@@ -45,7 +45,7 @@ func TestDockerBuild_BuildFileRelative(t *testing.T) {
 		BuildFile("./test_ctx/Dockerfile").
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker build -t some-image:latest -f Dockerfile .", err.Error())
+	assert.Equal(t, "dry run: docker build -t some-image:latest -f Dockerfile .", err.Error())
 }
 
 func TestDockerBuild_SetLabel(t *testing.T) {
@@ -55,7 +55,7 @@ func TestDockerBuild_SetLabel(t *testing.T) {
 		Label("a", "b").
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker build -t some-image:latest --label c=d --label a=b .", err.Error())
+	assert.Equal(t, "dry run: docker build -t some-image:latest --label c=d --label a=b .", err.Error())
 }
 
 func TestDockerBuild_LabelBuildTimestamp(t *testing.T) {
@@ -64,7 +64,6 @@ func TestDockerBuild_LabelBuildTimestamp(t *testing.T) {
 		LabelBuildTimestamp().
 		Run(ctx)
 	assert.Error(t, err)
-	pat := regexp.MustCompile(`docker build -t some-image:latest --label buildTimestamp=.+ \.`)
+	pat := regexp.MustCompile(`dry run: docker build -t some-image:latest --label buildTimestamp=.+ \.`)
 	assert.True(t, pat.MatchString(err.Error()), "Should match: '%s'", err.Error())
-	// assert.Equal(t, "docker build -t some-image:latest .", err.Error())
 }

@@ -14,7 +14,7 @@ func TestDockerRun_Run(t *testing.T) {
 	err := Docker().Dry().Run("some-image:latest").
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_Name(t *testing.T) {
@@ -23,7 +23,7 @@ func TestDockerRun_Run_Name(t *testing.T) {
 		Name("some-container").
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run --name=some-container some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run --name=some-container some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_Hostname(t *testing.T) {
@@ -32,7 +32,7 @@ func TestDockerRun_Run_Hostname(t *testing.T) {
 		SetHostname("some-container").
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run -h some-container some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run -h some-container some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_WorkingDir(t *testing.T) {
@@ -41,7 +41,7 @@ func TestDockerRun_Run_WorkingDir(t *testing.T) {
 		WorkingDirectory("/app").
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run -w /app some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run -w /app some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_Detached(t *testing.T) {
@@ -50,7 +50,7 @@ func TestDockerRun_Run_Detached(t *testing.T) {
 		Detached().
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run -d some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run -d some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_Interactive(t *testing.T) {
@@ -59,7 +59,7 @@ func TestDockerRun_Run_Interactive(t *testing.T) {
 		InteractiveTerminal().
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run -it some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run -it some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_Privileged(t *testing.T) {
@@ -68,7 +68,7 @@ func TestDockerRun_Run_Privileged(t *testing.T) {
 		PrivilegedContainer().
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run --privileged some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run --privileged some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_ReadOnly(t *testing.T) {
@@ -77,7 +77,7 @@ func TestDockerRun_Run_ReadOnly(t *testing.T) {
 		ReadOnlyFS().
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run --read-only some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run --read-only some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_Remove(t *testing.T) {
@@ -86,7 +86,7 @@ func TestDockerRun_Run_Remove(t *testing.T) {
 		RemoveAfterExit().
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run --rm some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run --rm some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_RestartPolicy(t *testing.T) {
@@ -97,19 +97,19 @@ func TestDockerRun_Run_RestartPolicy(t *testing.T) {
 	}{
 		"Never restart which is the default": {
 			policy:   RestartNever,
-			expected: "docker run some-image:latest",
+			expected: "dry run: docker run some-image:latest",
 		},
 		"Restart on failure": {
 			policy:   RestartOnFailure,
-			expected: "docker run --restart=on-failure some-image:latest",
+			expected: "dry run: docker run --restart=on-failure some-image:latest",
 		},
 		"Restart unless stopped": {
 			policy:   RestartUnlessStopped,
-			expected: "docker run --restart=unless-stopped some-image:latest",
+			expected: "dry run: docker run --restart=unless-stopped some-image:latest",
 		},
 		"Restart always": {
 			policy:   RestartAlways,
-			expected: "docker run --restart=always some-image:latest",
+			expected: "dry run: docker run --restart=always some-image:latest",
 		},
 		"Invalid policy": {
 			policy:   RestartPolicy("something-else"),
@@ -135,7 +135,7 @@ func TestDockerRun_Run_RestartRetries(t *testing.T) {
 		SetRestartRetries(5).
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run --restart=on-failure:5 some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run --restart=on-failure:5 some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_Network(t *testing.T) {
@@ -144,7 +144,7 @@ func TestDockerRun_Run_Network(t *testing.T) {
 		ConnectNetwork("somenet").
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run --network=somenet some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run --network=somenet some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_EnvVars(t *testing.T) {
@@ -154,7 +154,7 @@ func TestDockerRun_Run_EnvVars(t *testing.T) {
 		SetEnvVar("a", "b").
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run -e c=d -e a=b some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run -e c=d -e a=b some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_Ports(t *testing.T) {
@@ -163,7 +163,7 @@ func TestDockerRun_Run_Ports(t *testing.T) {
 		PublishPort(8080, 8081).
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run -p 8080:8081 some-image:latest", err.Error())
+	assert.Equal(t, "dry run: docker run -p 8080:8081 some-image:latest", err.Error())
 }
 
 func TestDockerRun_Run_Volumes(t *testing.T) {
@@ -174,12 +174,12 @@ func TestDockerRun_Run_Volumes(t *testing.T) {
 		VolumeMount(hostPath, containerPath).
 		Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, fmt.Sprintf("docker run -v %s:%s some-image:latest", hostPath.String(), containerPath.ToSlash()), err.Error())
+	assert.Equal(t, fmt.Sprintf("dry run: docker run -v %s:%s some-image:latest", hostPath.String(), containerPath.ToSlash()), err.Error())
 }
 
 func TestDockerRun_Run_Args(t *testing.T) {
 	ctx := context.Background()
 	err := Docker().Dry().Run("some-image:latest", "cmd", "arg1").Run(ctx)
 	assert.Error(t, err)
-	assert.Equal(t, "docker run some-image:latest cmd arg1", err.Error())
+	assert.Equal(t, "dry run: docker run some-image:latest cmd arg1", err.Error())
 }

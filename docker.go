@@ -28,7 +28,7 @@ func dryRunExec(args ...string) Task {
 }
 
 func (r *DryRunResult) Error() string {
-	return fmt.Sprintf("docker " + strings.Join(r.args, " "))
+	return fmt.Sprintf("dry run: docker " + strings.Join(r.args, " "))
 }
 
 func (r *DryRunResult) Args() []string {
