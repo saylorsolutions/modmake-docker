@@ -47,13 +47,7 @@ type DockerRef struct {
 // Docker will attempt to locate the Docker CLI, and return a DockerRef if successful.
 // If the Docker CLI cannot be located from the PATH, then ErrNoDockerFound will be returned.
 func Docker() *DockerRef {
-	_path, err := exec.LookPath("docker")
-	if err != nil {
-		panic(ErrNoDockerFound)
-	}
-	return &DockerRef{
-		exePath: Path(_path),
-	}
+	return &DockerRef{}
 }
 
 // Dry enables dry run mode for all subsequent use of this [DockerRef].
@@ -68,7 +62,7 @@ func (d *DockerRef) Command(args ...string) Task {
 	if d.dryRun {
 		return dryRunExec(args...)
 	}
-	if d.exePath != Path("") {
+	if d.exePath == Path("") {
 		_path, err := exec.LookPath("docker")
 		if err != nil {
 			return Error("%w: unable to locate docker, and this is not a dry run", ErrNoDockerFound)
