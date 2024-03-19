@@ -173,6 +173,7 @@ func (r *DockerRun) SetRestartRetries(retries int) *DockerRun {
 		return r
 	}
 	r.restartPolicy = RestartPolicy(fmt.Sprintf("%s:%d", string(RestartOnFailure), retries))
+	r.removeAfterExit = false
 	return r
 }
 

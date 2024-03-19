@@ -79,7 +79,7 @@ func (b *DockerBuild) Run(ctx context.Context) error {
 		if doChdir {
 			rel, err := b.context.Rel(b.buildFile)
 			if err != nil {
-				return fmt.Errorf("unable to make a relative path to '%s' with '%s'", b.buildFile, b.context)
+				return fmt.Errorf("unable to make a relative path from '%s' to '%s'", b.context, b.buildFile)
 			}
 			args = append(args, "-f", rel.String())
 		} else {
