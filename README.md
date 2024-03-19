@@ -1,25 +1,51 @@
 # Modmake Docker Plugin
 
 This repo provides some base functionality for building, running, and interacting with Docker images and containers.
-If you're not familiar with [Docker](https://www.docker.com/) or [Modmake](https://saylorsolutions.github.io/modmake/), then this probably isn't for you.
+If you're not familiar with [Go](https://go.dev/), [Docker](https://www.docker.com/), or [Modmake](https://saylorsolutions.github.io/modmake/), then this probably isn't for you yet.
+Check out those first and circle back here to find out how this can help you.
 
-Just like Modmake itself it can be added to your project as a dependency. 
+## API Docs
+
+The API docs are generously hosted here:
+https://pkg.go.dev/github.com/saylorsolutions/modmake-docker
+
+## How to get it
+
+Just like Modmake itself, this plugin can be added to your project as a dependency. 
+
+> The Docker CLI is required to be available on the PATH to use this plugin.
 
 ```bash
 go get github.com/saylorsolutions/modmake-docker@latest
 ```
 
-Once that's done, it can be incorporated into any new or existing Modmake build.
+Once that's done, this can be incorporated into any new or existing Modmake build.
 
-# Reporting Bugs or Recommendations
+## Reporting Bugs or Recommendations
 
-If you find a bug in modmake-docker or have an idea for improvement, please [report an issue](https://github.com/saylorsolutions/modmake-docker/issues/new/choose) so I can get it fixed/added.
+If you find a bug in this project or have an idea for improvement, please [report an issue](https://github.com/saylorsolutions/modmake-docker/issues/new/choose) so I can get it fixed/added.
 
-## Basic Usage
+# Disclaimers and such
 
-Building images and running containers are the most basic operations, and both are supported by modmake-docker.
-This is a step-by-step guide for basic usage.
-There is always more that can be added to this to make it fit your needs.
+This project is ***NOT*** endorsed by or produced in conjunction with the owners, operators, project maintainers, directors, or other entities associated with Docker and related tooling or systems.
+
+I do ***NOT*** own - in *any* capacity - the right to use or profit from Docker trademarks or branding.
+
+This is ***NOT*** intended to be fully representative of the offering or capability of Docker and related tooling or systems in any way.
+
+The Docker owners, operators, project maintainers, directors, or other entities associated with Docker and related tooling or systems are and continue to be in perpetuity, free to change the CLI interface on which this plugin depends in any way, with or without corresponding changes in this repository or documentation, and without notice.
+
+This is *just* a Modmake-specific way to access the Docker CLI interface. The two projects are ***NOT*** related in any official way.
+
+For official Docker tooling and information, see their website:
+https://www.docker.com/
+
+# Basic Usage
+
+Building images and running containers are the most basic operations, and both are supported by this plugin.
+
+Here's a step-by-step guide for basic usage.
+There are many ways this can be customized to fit your needs.
 
 ### Build Example
 
