@@ -1,5 +1,7 @@
 # Modmake Docker Plugin
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/saylorsolutions/modmake-docker)](https://goreportcard.com/report/github.com/saylorsolutions/modmake-docker)
+
 This repo provides some base functionality for building, running, and interacting with Docker images and containers.
 If you're not familiar with [Go](https://go.dev/), [Docker](https://www.docker.com/), or [Modmake](https://saylorsolutions.github.io/modmake/), then this probably isn't for you yet.
 Check out those first and circle back here to find out how this can help you.
