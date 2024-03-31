@@ -1,6 +1,6 @@
 module github.com/saylorsolutions/modmake-docker
 
-go 1.22.1
+go 1.20
 
 require (
 	github.com/saylorsolutions/modmake v0.3.0
