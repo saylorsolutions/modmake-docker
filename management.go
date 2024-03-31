@@ -105,3 +105,24 @@ func (d *DockerRef) Stop(name string) Task {
 func (d *DockerRef) Start(name string) Task {
 	return d.Command("start", name).Run
 }
+
+func (d *DockerRef) Exec(containerName string, cmdAndArgs ...string) Task {
+	cmd := append([]string{"exec", "-it", containerName}, cmdAndArgs...)
+	return d.Command(cmd...)
+}
+
+func (d *DockerRef) Login(host string) Task {
+	return d.Command("login", host)
+}
+
+func (d *DockerRef) Pull(imageAndTag string) Task {
+	return d.Command("pull", imageAndTag)
+}
+
+func (d *DockerRef) Tag(currentTag, newTag string) Task {
+	return d.Command("tag", currentTag, newTag)
+}
+
+func (d *DockerRef) Push(imageAndTag string) Task {
+	return d.Command("push", imageAndTag)
+}

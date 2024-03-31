@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	. "github.com/saylorsolutions/modmake"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -47,4 +48,33 @@ func TestDocker_Stop(t *testing.T) {
 	err := Docker().Dry().Stop("some-container").Run(ctx)
 	assert.Error(t, err)
 	assert.Equal(t, "dry run: docker stop some-container", err.Error())
+}
+
+func TestDockerRef_Exec(t *testing.T) {
+	ctx := context.Background()
+	err := Docker().Dry().Exec("some-container", "echo", "Hello!").Run(ctx)
+	assert.Error(t, err)
+	assert.Equal(t, "dry run: docker exec -it some-container echo Hello!", err.Error())
+}
+
+func TestPullRetagPush(t *testing.T) {
+	d := Docker().Dry()
+	isDryRunCmd(t, d.Login("some-host.com"), "docker login some-host.com")
+	isDryRunCmd(t, d.Pull("some-host.com/my-image:1"),
+		"docker pull some-host.com/my-image:1",
+	)
+	isDryRunCmd(t,
+		d.Tag("some-host.com/my-image:1", "some-host.com/my-image:latest"),
+		"docker tag some-host.com/my-image:1 some-host.com/my-image:latest",
+	)
+	isDryRunCmd(t,
+		d.Push("some-host.com/my-image:latest"),
+		"docker push some-host.com/my-image:latest",
+	)
+}
+
+func isDryRunCmd(t *testing.T, task Task, command string) {
+	err := task.Run(context.Background())
+	assert.Error(t, err)
+	assert.Equal(t, "dry run: "+command, err.Error())
 }
