@@ -107,9 +107,108 @@ func (d *DockerRef) Start(name string) Task {
 	return d.Command("start", name).Run
 }
 
-func (d *DockerRef) Exec(containerName string, cmdAndArgs ...string) Task {
-	cmd := append([]string{"exec", "-it", containerName}, cmdAndArgs...)
-	return d.Command(cmd...)
+type DockerExec struct {
+	ref                                    *DockerRef
+	err                                    error
+	containerName                          string
+	cmd                                    []string
+	detached, interactive, tty, privileged bool
+	userGroup                              string
+	workingDir                             PathString
+}
+
+func (d *DockerRef) Exec(containerName string, cmd string, args ...string) *DockerExec {
+	containerName = strings.TrimSpace(containerName)
+	cmd = strings.TrimSpace(cmd)
+	if len(containerName) == 0 {
+		panic("missing container name")
+	}
+	if len(cmd) == 0 {
+		panic("no command specified")
+	}
+	return &DockerExec{ref: d, containerName: containerName, cmd: append([]string{cmd}, args...), interactive: true}
+}
+
+func (e *DockerExec) Detached() *DockerExec {
+	if e.err != nil {
+		return e
+	}
+	e.detached = true
+	e.interactive = false
+	e.tty = false
+	return e
+}
+
+func (e *DockerExec) InteractiveTerm() *DockerExec {
+	if e.err != nil {
+		return e
+	}
+	e.interactive = true
+	e.tty = true
+	e.detached = false
+	return e
+}
+
+func (e *DockerExec) Privileged() *DockerExec {
+	if e.err != nil {
+		return e
+	}
+	e.privileged = true
+	return e
+}
+
+func (e *DockerExec) User(userGroup string) *DockerExec {
+	if e.err != nil {
+		return e
+	}
+	userGroup = strings.TrimSpace(userGroup)
+	if len(userGroup) == 0 {
+		e.err = errors.New("empty user/group")
+		return e
+	}
+	e.userGroup = userGroup
+	return e
+}
+
+func (e *DockerExec) WorkingDir(wd PathString) *DockerExec {
+	if e.err != nil {
+		return e
+	}
+	e.workingDir = wd
+	return e
+}
+
+func (e *DockerExec) Task() Task {
+	return e.Run
+}
+
+func (e *DockerExec) Run(ctx context.Context) error {
+	if e.err != nil {
+		return e.err
+	}
+	args := []string{"exec"}
+	if e.detached {
+		args = append(args, "-d")
+	} else {
+		if e.interactive {
+			args = append(args, "-i")
+		}
+		if e.tty {
+			args = append(args, "-t")
+		}
+	}
+	if e.privileged {
+		args = append(args, "--privileged")
+	}
+	if len(e.userGroup) > 0 {
+		args = append(args, "-u", e.userGroup)
+	}
+	wd := e.workingDir.ToSlash()
+	if len(wd) > 0 {
+		args = append(args, "-w", wd)
+	}
+	args = append(append(args, e.containerName), e.cmd...)
+	return e.ref.Command(args...).Run(ctx)
 }
 
 type DockerLogin struct {

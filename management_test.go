@@ -52,30 +52,39 @@ func TestDocker_Stop(t *testing.T) {
 }
 
 func TestDockerRef_Exec(t *testing.T) {
-	ctx := context.Background()
-	err := Docker().Dry().Exec("some-container", "echo", "Hello!").Run(ctx)
-	assert.Error(t, err)
-	assert.Equal(t, "dry run: docker exec -it some-container echo Hello!", err.Error())
+	d := Docker().Dry()
+	isDryRunResult(t, d.Exec("some-container", "echo", "Hello!").Task(),
+		"docker exec -i some-container echo Hello!")
+	isDryRunResult(t, d.Exec("some-container", "blah").InteractiveTerm().Task(),
+		"docker exec -i -t some-container blah")
+	isDryRunResult(t, d.Exec("some-container", "blah").Detached().Task(),
+		"docker exec -d some-container blah")
+	isDryRunResult(t, d.Exec("some-container", "blah").Detached().Privileged().Task(),
+		"docker exec -d --privileged some-container blah")
+	isDryRunResult(t, d.Exec("some-container", "blah").User("bob:admin").Task(),
+		"docker exec -i -u bob:admin some-container blah")
+	isDryRunResult(t, d.Exec("some-container", "blah").WorkingDir("/app").Task(),
+		"docker exec -i -w /app some-container blah")
 }
 
 func TestPullRetagPush(t *testing.T) {
 	d := Docker().Dry()
-	isDryRunCmd(t, d.Login("some-host.com").Username("bob").Password(F("${SOME_SECRET_VAR:secret}")).Task(),
+	isDryRunResult(t, d.Login("some-host.com").Username("bob").Password(F("${SOME_SECRET_VAR:secret}")).Task(),
 		"docker login -u bob -p secret some-host.com")
-	isDryRunCmd(t, d.Pull("some-host.com/my-image:1"),
+	isDryRunResult(t, d.Pull("some-host.com/my-image:1"),
 		"docker pull some-host.com/my-image:1",
 	)
-	isDryRunCmd(t,
+	isDryRunResult(t,
 		d.Tag("some-host.com/my-image:1", "some-host.com/my-image:latest"),
 		"docker tag some-host.com/my-image:1 some-host.com/my-image:latest",
 	)
-	isDryRunCmd(t,
+	isDryRunResult(t,
 		d.Push("some-host.com/my-image:latest"),
 		"docker push some-host.com/my-image:latest",
 	)
 }
 
-func isDryRunCmd(t *testing.T, task Task, command string) {
+func isDryRunResult(t *testing.T, task Task, command string) {
 	err := task.Run(context.Background())
 	assert.Error(t, err)
 	var dryRunResult *DryRunResult
