@@ -2,6 +2,7 @@ package modmake_docker
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	. "github.com/saylorsolutions/modmake"
@@ -59,7 +60,8 @@ func TestDockerRef_Exec(t *testing.T) {
 
 func TestPullRetagPush(t *testing.T) {
 	d := Docker().Dry()
-	isDryRunCmd(t, d.Login("some-host.com"), "docker login some-host.com")
+	isDryRunCmd(t, d.Login("some-host.com").Username("bob").Password(F("${SOME_SECRET_VAR:secret}")).Task(),
+		"docker login -u bob -p secret some-host.com")
 	isDryRunCmd(t, d.Pull("some-host.com/my-image:1"),
 		"docker pull some-host.com/my-image:1",
 	)
@@ -76,5 +78,8 @@ func TestPullRetagPush(t *testing.T) {
 func isDryRunCmd(t *testing.T, task Task, command string) {
 	err := task.Run(context.Background())
 	assert.Error(t, err)
+	var dryRunResult *DryRunResult
+	ok := errors.As(err, &dryRunResult)
+	assert.True(t, ok, "Should have been a dry run error")
 	assert.Equal(t, "dry run: "+command, err.Error())
 }

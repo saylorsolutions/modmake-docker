@@ -2,6 +2,7 @@ package modmake_docker
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -111,8 +112,67 @@ func (d *DockerRef) Exec(containerName string, cmdAndArgs ...string) Task {
 	return d.Command(cmd...)
 }
 
-func (d *DockerRef) Login(host string) Task {
-	return d.Command("login", host)
+type DockerLogin struct {
+	ref            *DockerRef
+	err            error
+	host, username string
+	password       []byte
+	readStdin      bool
+}
+
+func (d *DockerRef) Login(host string) *DockerLogin {
+	host = strings.TrimSpace(host)
+	if len(host) == 0 {
+		panic("missing host")
+	}
+	return &DockerLogin{ref: d, host: host, readStdin: true}
+}
+
+func (l *DockerLogin) Username(username string) *DockerLogin {
+	if l.err != nil {
+		return l
+	}
+	username = strings.TrimSpace(username)
+	if len(username) == 0 {
+		return l
+	}
+	l.username = username
+	return l
+}
+
+func (l *DockerLogin) Password(password string) *DockerLogin {
+	if l.err != nil {
+		return l
+	}
+	password = strings.TrimSpace(password)
+	if len(password) == 0 {
+		return l
+	}
+	l.password = []byte(password)
+	l.readStdin = false
+	return l
+}
+
+func (l *DockerLogin) Task() Task {
+	return l.Run
+}
+
+func (l *DockerLogin) Run(ctx context.Context) error {
+	if l.err != nil {
+		return l.err
+	}
+	args := []string{"login"}
+	if len(l.username) > 0 {
+		args = append(args, "-u", l.username)
+	}
+	if !l.readStdin {
+		if len(l.password) == 0 {
+			return errors.New("missing password for login")
+		}
+		args = append(args, "-p", string(l.password))
+	}
+	args = append(args, l.host)
+	return l.ref.Command(args...).Run(ctx)
 }
 
 func (d *DockerRef) Pull(imageAndTag string) Task {
