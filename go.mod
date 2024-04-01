@@ -3,7 +3,7 @@ module github.com/saylorsolutions/modmake-docker
 go 1.20
 
 require (
-	github.com/saylorsolutions/modmake v0.3.0
+	github.com/saylorsolutions/modmake v0.3.1
 	github.com/stretchr/testify v1.9.0
 )
 
