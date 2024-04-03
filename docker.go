@@ -67,7 +67,7 @@ func (d *DockerRef) Command(args ...string) Task {
 			if errors.Is(err, ErrNoDockerFound) {
 				return Error("%w: unable to locate docker, and this is not a dry run", ErrNoDockerFound)
 			}
-			return Error("%w", err)
+			return Error("unexpected error: %w", err)
 		}
 		d.exePath = Path(_path)
 	}
