@@ -8,16 +8,14 @@ import (
 	. "github.com/saylorsolutions/modmake"
 )
 
-// Create a new [DockerRun] instance, used to run a container.
+// Run creates a new [DockerRun] instance, used to run a container.
 func (d *DockerRef) Run(image string, args ...string) *DockerRun {
+	anyBlankPanic(strmap{"image": &image})
 	r := &DockerRun{
 		d:             d,
 		image:         image,
 		args:          args,
 		restartPolicy: RestartNever,
-	}
-	if len(image) == 0 {
-		r.err = fmt.Errorf("%w: missing image", ErrRequiredParam)
 	}
 	return r
 }
@@ -29,7 +27,6 @@ type DockerRun struct {
 	name            string
 	image           string
 	args            []string
-	err             error
 	hostname        string
 	workingDir      string
 	networkConn     string
@@ -46,18 +43,13 @@ type DockerRun struct {
 
 // Detached runs the container detached, printing the container ID instead of writing logs to STDOUT.
 func (r *DockerRun) Detached() *DockerRun {
-	if r.err != nil {
-		return r
-	}
 	r.detached = true
 	return r
 }
 
 // SetEnvVar will set an environment variable in the container when it's run.
 func (r *DockerRun) SetEnvVar(key, val string) *DockerRun {
-	if r.err != nil {
-		return r
-	}
+	anyBlankPanic(strmap{"key": &key, "val": &val})
 	_val := fmt.Sprintf("%s=%s", strings.TrimSpace(key), strings.TrimSpace(val))
 	r.env = append(r.env, _val)
 	return r
@@ -66,11 +58,8 @@ func (r *DockerRun) SetEnvVar(key, val string) *DockerRun {
 // PublishPort will publish a port, mapping a host port to a container port.
 // These ports don't have to match.
 func (r *DockerRun) PublishPort(host, container int) *DockerRun {
-	if r.err != nil {
-		return r
-	}
 	if host < 1 || container < 1 {
-		r.err = fmt.Errorf("%w: invalid port value '%d:%d'", ErrRequiredParam, host, container)
+		panicf("invalid port value '%d:%d'", host, container)
 		return r
 	}
 	r.portMappings = append(r.portMappings, fmt.Sprintf("%d:%d", host, container))
@@ -81,65 +70,40 @@ func (r *DockerRun) PublishPort(host, container int) *DockerRun {
 // Other containers may reference this container (assuming they're on the same network) using this host name.
 // By default, the container can be referenced by its container name.
 func (r *DockerRun) SetHostname(host string) *DockerRun {
-	if r.err != nil {
-		return r
-	}
-	host = strings.TrimSpace(host)
-	if len(host) == 0 {
-		r.err = fmt.Errorf("%w: missing host name '%s'", ErrRequiredParam, host)
-		return r
-	}
+	anyBlankPanic(strmap{"host": &host})
 	r.hostname = host
 	return r
 }
 
 // InteractiveTerminal will allow the specified command to be interactive, allocating a terminal to do so.
 func (r *DockerRun) InteractiveTerminal() *DockerRun {
-	if r.err != nil {
-		return r
-	}
 	r.interactive = true
 	return r
 }
 
 // Name will set the container name when started.
 func (r *DockerRun) Name(name string) *DockerRun {
-	if r.err != nil {
-		return r
-	}
+	anyBlankPanic(strmap{"name": &name})
 	r.name = name
 	return r
 }
 
 // ConnectNetwork will allow this container to communicate using the named network.
 func (r *DockerRun) ConnectNetwork(network string) *DockerRun {
-	if r.err != nil {
-		return r
-	}
-	_network := strings.TrimSpace(network)
-	if len(_network) == 0 {
-		r.err = fmt.Errorf("%w: invalid network param '%s'", ErrRequiredParam, network)
-		return r
-	}
-	r.networkConn = _network
+	anyBlankPanic(strmap{"network": &network})
+	r.networkConn = network
 	return r
 }
 
 // PrivilegedContainer will run this container in "privileged" mode.
 // This should not be used unless specifically required by an image constraint, as it opens up the container host to possible security vulnerabilities.
 func (r *DockerRun) PrivilegedContainer() *DockerRun {
-	if r.err != nil {
-		return r
-	}
 	r.privileged = true
 	return r
 }
 
 // ReadOnlyFS will place the container's file system in read only mode.
 func (r *DockerRun) ReadOnlyFS() *DockerRun {
-	if r.err != nil {
-		return r
-	}
 	r.readOnly = true
 	return r
 }
@@ -163,11 +127,11 @@ var knownRestartPolicies = map[RestartPolicy]struct{}{
 
 // SetRestartPolicy will set a [RestartPolicy] for the running container.
 func (r *DockerRun) SetRestartPolicy(policy RestartPolicy) *DockerRun {
-	if r.err != nil {
-		return r
-	}
+	polStr := string(policy)
+	anyBlankPanic(strmap{"policy": &polStr})
+	policy = RestartPolicy(polStr)
 	if _, ok := knownRestartPolicies[policy]; !ok {
-		r.err = fmt.Errorf("%w: unknown restart policy '%s'", ErrRequiredParam, policy)
+		panicf("unknown restart policy '%s'", policy)
 		return r
 	}
 	if policy != RestartNever {
@@ -179,11 +143,8 @@ func (r *DockerRun) SetRestartPolicy(policy RestartPolicy) *DockerRun {
 
 // SetRestartRetries will set the [RestartOnFailure] policy, with the given number of retries.
 func (r *DockerRun) SetRestartRetries(retries int) *DockerRun {
-	if r.err != nil {
-		return r
-	}
 	if retries < 1 {
-		r.err = fmt.Errorf("%w: invalid retries '%d'", ErrRequiredParam, retries)
+		panicf("invalid retries '%d'", retries)
 		return r
 	}
 	r.restartPolicy = RestartPolicy(fmt.Sprintf("%s:%d", string(RestartOnFailure), retries))
@@ -194,9 +155,6 @@ func (r *DockerRun) SetRestartRetries(retries int) *DockerRun {
 // RemoveAfterExit will cause the container to be removed when it's stopped.
 // This is mutually exclusive with a [RestartPolicy].
 func (r *DockerRun) RemoveAfterExit() *DockerRun {
-	if r.err != nil {
-		return r
-	}
 	r.removeAfterExit = true
 	r.restartPolicy = RestartNever
 	return r
@@ -204,12 +162,11 @@ func (r *DockerRun) RemoveAfterExit() *DockerRun {
 
 // VolumeMount will mount a host path at a container path to allow reading/writing in the host file system.
 func (r *DockerRun) VolumeMount(hostPath, containerPath PathString) *DockerRun {
-	if r.err != nil {
-		return r
-	}
+	cps := containerPath.String()
+	anyBlankPanic(strmap{"containerPath": &cps})
 	absHostPath, err := hostPath.Abs()
 	if err != nil {
-		r.err = fmt.Errorf("failed to get absolute path for host bind mount: %w", err)
+		panicf("failed to get absolute path for host bind mount: %v", err)
 		return r
 	}
 	r.bindMounts = append(r.bindMounts, fmt.Sprintf("%s:%s", absHostPath.String(), containerPath.ToSlash()))
@@ -218,9 +175,6 @@ func (r *DockerRun) VolumeMount(hostPath, containerPath PathString) *DockerRun {
 
 // WorkingDirectory will set the working directory for the container entry point command.
 func (r *DockerRun) WorkingDirectory(containerPath PathString) *DockerRun {
-	if r.err != nil {
-		return r
-	}
 	r.workingDir = containerPath.ToSlash()
 	return r
 }
@@ -230,9 +184,6 @@ func (r *DockerRun) Task() Task {
 }
 
 func (r *DockerRun) Run(ctx context.Context) error {
-	if r.err != nil {
-		return r.err
-	}
 	args := []string{"run"}
 	if len(r.name) > 0 {
 		args = append(args, "--name="+r.name)

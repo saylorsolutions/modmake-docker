@@ -111,10 +111,6 @@ func TestDockerRun_Run_RestartPolicy(t *testing.T) {
 			policy:   RestartAlways,
 			expected: "dry run: docker run --restart=always some-image:latest",
 		},
-		"Invalid policy": {
-			policy:   RestartPolicy("something-else"),
-			expected: "missing required parameter: unknown restart policy 'something-else'",
-		},
 	}
 
 	for name, tc := range tests {
