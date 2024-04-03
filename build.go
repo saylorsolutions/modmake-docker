@@ -3,7 +3,6 @@ package modmake_docker
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	. "github.com/saylorsolutions/modmake"
@@ -11,16 +10,12 @@ import (
 
 // Build provides a method and options for building a Docker image.
 func (d *DockerRef) Build(image string, context PathString) *DockerBuild {
-	image = strings.TrimSpace(image)
-	if len(image) == 0 {
-		return &DockerBuild{err: fmt.Errorf("%w: missing image", ErrRequiredParam)}
-	}
+	anyBlankPanic(strmap{"image": &image})
 	return &DockerBuild{d: d, image: image, context: context}
 }
 
 type DockerBuild struct {
 	d         *DockerRef
-	err       error
 	image     string
 	context   PathString
 	buildFile PathString
@@ -31,9 +26,7 @@ type DockerBuild struct {
 // BuildArg sets a build argument for this image build.
 // These are distinct from environment variables.
 func (b *DockerBuild) BuildArg(key, value string) *DockerBuild {
-	if b.err != nil {
-		return b
-	}
+	anyBlankPanic(strmap{"key": &key})
 	b.buildArgs = append(b.buildArgs, fmt.Sprintf("%s=%s", key, value))
 	return b
 }
@@ -41,27 +34,21 @@ func (b *DockerBuild) BuildArg(key, value string) *DockerBuild {
 // BuildFile specifies a Dockerfile for this build.
 // This is useful if the Dockerfile isn't named "Dockerfile" in the working context of the build.
 func (b *DockerBuild) BuildFile(filePath PathString) *DockerBuild {
-	if b.err != nil {
-		return b
-	}
+	fps := filePath.String()
+	anyBlankPanic(strmap{"filePath": &fps})
 	b.buildFile = filePath
 	return b
 }
 
 // Label will set a metadata label in the built image.
 func (b *DockerBuild) Label(key, val string) *DockerBuild {
-	if b.err != nil {
-		return b
-	}
+	anyBlankPanic(strmap{"key": &key, "val": &val})
 	b.labels = append(b.labels, fmt.Sprintf("%s=%s", key, val))
 	return b
 }
 
 // LabelBuildTimestamp will set a build time timestamp in the built image.
 func (b *DockerBuild) LabelBuildTimestamp() *DockerBuild {
-	if b.err != nil {
-		return b
-	}
 	return b.Label("buildTimestamp", time.Now().Format(time.RFC3339))
 }
 
@@ -70,9 +57,6 @@ func (b *DockerBuild) Task() Task {
 }
 
 func (b *DockerBuild) Run(ctx context.Context) error {
-	if b.err != nil {
-		return b.err
-	}
 	var (
 		args    = []string{"build", "-t", b.image}
 		chdir   PathString

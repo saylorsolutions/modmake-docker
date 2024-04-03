@@ -3,7 +3,6 @@ package modmake_docker
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	. "github.com/saylorsolutions/modmake"
@@ -12,10 +11,7 @@ import (
 // RemoveImage will attempt to remove an image from the local repository.
 // Use [DockerRemoveImage.Force] to allow removing currently referenced images.
 func (d *DockerRef) RemoveImage(image string) *DockerRemoveImage {
-	image = strings.TrimSpace(image)
-	if len(image) == 0 {
-		return &DockerRemoveImage{err: fmt.Errorf("%w: missing image name/hash", ErrRequiredParam)}
-	}
+	anyBlankPanic(strmap{"image": &image})
 	return &DockerRemoveImage{
 		d:     d,
 		image: image,
@@ -24,16 +20,12 @@ func (d *DockerRef) RemoveImage(image string) *DockerRemoveImage {
 
 type DockerRemoveImage struct {
 	d     *DockerRef
-	err   error
 	image string
 	force bool
 }
 
 // Force will force removal of the referenced Docker image.
 func (r *DockerRemoveImage) Force() *DockerRemoveImage {
-	if r.err != nil {
-		return r
-	}
 	r.force = true
 	return r
 }
@@ -43,9 +35,6 @@ func (r *DockerRemoveImage) Task() Task {
 }
 
 func (r *DockerRemoveImage) Run(ctx context.Context) error {
-	if r.err != nil {
-		return r.err
-	}
 	args := []string{"rmi"}
 	if r.force {
 		args = append(args, "-f")
@@ -56,10 +45,7 @@ func (r *DockerRemoveImage) Run(ctx context.Context) error {
 // RemoveContainer will attempt to remove a container.
 // Use [DockerRemoveContainer.Force] to force remove, which can remove running containers.
 func (d *DockerRef) RemoveContainer(name string) *DockerRemoveContainer {
-	name = strings.TrimSpace(name)
-	if len(name) == 0 {
-		return &DockerRemoveContainer{err: fmt.Errorf("%w: missing container name", ErrRequiredParam)}
-	}
+	anyBlankPanic(strmap{"name": &name})
 	return &DockerRemoveContainer{
 		d:    d,
 		name: name,
@@ -68,16 +54,12 @@ func (d *DockerRef) RemoveContainer(name string) *DockerRemoveContainer {
 
 type DockerRemoveContainer struct {
 	d     *DockerRef
-	err   error
 	name  string
 	force bool
 }
 
 // Force will force removal of the referenced Docker container.
 func (r *DockerRemoveContainer) Force() *DockerRemoveContainer {
-	if r.err != nil {
-		return r
-	}
 	r.force = true
 	return r
 }
@@ -87,9 +69,6 @@ func (r *DockerRemoveContainer) Task() Task {
 }
 
 func (r *DockerRemoveContainer) Run(ctx context.Context) error {
-	if r.err != nil {
-		return r.err
-	}
 	args := []string{"rm"}
 	if r.force {
 		args = append(args, "-f")
@@ -99,17 +78,18 @@ func (r *DockerRemoveContainer) Run(ctx context.Context) error {
 
 // Stop will attempt to stop a running container with the given name.
 func (d *DockerRef) Stop(name string) Task {
+	anyBlankPanic(strmap{"name": &name})
 	return d.Command("stop", name).Run
 }
 
 // Start will attempt to start a container with the given name.
 func (d *DockerRef) Start(name string) Task {
+	anyBlankPanic(strmap{"name": &name})
 	return d.Command("start", name).Run
 }
 
 type DockerExec struct {
 	ref                                    *DockerRef
-	err                                    error
 	containerName                          string
 	cmd                                    []string
 	detached, interactive, tty, privileged bool
@@ -118,21 +98,11 @@ type DockerExec struct {
 }
 
 func (d *DockerRef) Exec(containerName string, cmd string, args ...string) *DockerExec {
-	containerName = strings.TrimSpace(containerName)
-	cmd = strings.TrimSpace(cmd)
-	if len(containerName) == 0 {
-		panic("missing container name")
-	}
-	if len(cmd) == 0 {
-		panic("no command specified")
-	}
+	anyBlankPanic(strmap{"containerName": &containerName, "cmd": &cmd})
 	return &DockerExec{ref: d, containerName: containerName, cmd: append([]string{cmd}, args...), interactive: true}
 }
 
 func (e *DockerExec) Detached() *DockerExec {
-	if e.err != nil {
-		return e
-	}
 	e.detached = true
 	e.interactive = false
 	e.tty = false
@@ -140,9 +110,6 @@ func (e *DockerExec) Detached() *DockerExec {
 }
 
 func (e *DockerExec) InteractiveTerm() *DockerExec {
-	if e.err != nil {
-		return e
-	}
 	e.interactive = true
 	e.tty = true
 	e.detached = false
@@ -150,29 +117,19 @@ func (e *DockerExec) InteractiveTerm() *DockerExec {
 }
 
 func (e *DockerExec) Privileged() *DockerExec {
-	if e.err != nil {
-		return e
-	}
 	e.privileged = true
 	return e
 }
 
 func (e *DockerExec) User(userGroup string) *DockerExec {
-	if e.err != nil {
-		return e
-	}
-	userGroup = strings.TrimSpace(userGroup)
-	if len(userGroup) == 0 {
-		e.err = errors.New("empty user/group")
-		return e
-	}
+	anyBlankPanic(strmap{"userGroup": &userGroup})
 	e.userGroup = userGroup
 	return e
 }
 
 func (e *DockerExec) WorkingDir(wd PathString) *DockerExec {
-	if e.err != nil {
-		return e
+	if len(wd.String()) == 0 {
+		panic("empty working directory path")
 	}
 	e.workingDir = wd
 	return e
@@ -183,9 +140,6 @@ func (e *DockerExec) Task() Task {
 }
 
 func (e *DockerExec) Run(ctx context.Context) error {
-	if e.err != nil {
-		return e.err
-	}
 	args := []string{"exec"}
 	if e.detached {
 		args = append(args, "-d")
@@ -213,24 +167,17 @@ func (e *DockerExec) Run(ctx context.Context) error {
 
 type DockerLogin struct {
 	ref            *DockerRef
-	err            error
 	host, username string
 	password       []byte
 	readStdin      bool
 }
 
 func (d *DockerRef) Login(host string) *DockerLogin {
-	host = strings.TrimSpace(host)
-	if len(host) == 0 {
-		panic("missing host")
-	}
+	anyBlankPanic(strmap{"host": &host})
 	return &DockerLogin{ref: d, host: host, readStdin: true}
 }
 
 func (l *DockerLogin) Username(username string) *DockerLogin {
-	if l.err != nil {
-		return l
-	}
 	username = strings.TrimSpace(username)
 	if len(username) == 0 {
 		return l
@@ -240,9 +187,6 @@ func (l *DockerLogin) Username(username string) *DockerLogin {
 }
 
 func (l *DockerLogin) Password(password string) *DockerLogin {
-	if l.err != nil {
-		return l
-	}
 	password = strings.TrimSpace(password)
 	if len(password) == 0 {
 		return l
@@ -257,9 +201,6 @@ func (l *DockerLogin) Task() Task {
 }
 
 func (l *DockerLogin) Run(ctx context.Context) error {
-	if l.err != nil {
-		return l.err
-	}
 	args := []string{"login"}
 	if len(l.username) > 0 {
 		args = append(args, "-u", l.username)
@@ -275,13 +216,16 @@ func (l *DockerLogin) Run(ctx context.Context) error {
 }
 
 func (d *DockerRef) Pull(imageAndTag string) Task {
+	anyBlankPanic(strmap{"imageAndTag": &imageAndTag})
 	return d.Command("pull", imageAndTag)
 }
 
 func (d *DockerRef) Tag(currentTag, newTag string) Task {
+	anyBlankPanic(strmap{"currentTag": &currentTag, "newTag": &newTag})
 	return d.Command("tag", currentTag, newTag)
 }
 
 func (d *DockerRef) Push(imageAndTag string) Task {
+	anyBlankPanic(strmap{"imageAndTag": &imageAndTag})
 	return d.Command("push", imageAndTag)
 }

@@ -12,7 +12,6 @@ import (
 
 var (
 	ErrNoDockerFound = errors.New("unable to locate docker executable")
-	ErrRequiredParam = errors.New("missing required parameter")
 )
 
 var _ error = (*DryRunResult)(nil)
@@ -65,7 +64,10 @@ func (d *DockerRef) Command(args ...string) Task {
 	if d.exePath == Path("") {
 		_path, err := exec.LookPath("docker")
 		if err != nil {
-			return Error("%w: unable to locate docker, and this is not a dry run", ErrNoDockerFound)
+			if errors.Is(err, ErrNoDockerFound) {
+				return Error("%w: unable to locate docker, and this is not a dry run", ErrNoDockerFound)
+			}
+			return Error("%w", err)
 		}
 		d.exePath = Path(_path)
 	}
