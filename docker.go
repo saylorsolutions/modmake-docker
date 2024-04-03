@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	. "github.com/saylorsolutions/modmake"
 	"os/exec"
 	"strings"
-
-	. "github.com/saylorsolutions/modmake"
 )
 
 var (
@@ -71,5 +70,10 @@ func (d *DockerRef) Command(args ...string) Task {
 		}
 		d.exePath = Path(_path)
 	}
-	return Exec(append([]string{d.exePath.String()}, args...)...).CaptureStdin().Run
+	cmdArgs := append([]string{d.exePath.String()}, args...)
+	sudoPrefix := d.sudoPrefix()
+	if len(sudoPrefix) > 0 {
+		cmdArgs = append([]string{sudoPrefix}, cmdArgs...)
+	}
+	return Exec(cmdArgs...).CaptureStdin().Run
 }
