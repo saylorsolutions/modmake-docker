@@ -4,15 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	. "github.com/saylorsolutions/modmake"
 	"os/exec"
 	"strings"
-
-	. "github.com/saylorsolutions/modmake"
 )
 
 var (
 	ErrNoDockerFound = errors.New("unable to locate docker executable")
-	ErrRequiredParam = errors.New("missing required parameter")
 )
 
 var _ error = (*DryRunResult)(nil)
@@ -65,9 +63,17 @@ func (d *DockerRef) Command(args ...string) Task {
 	if d.exePath == Path("") {
 		_path, err := exec.LookPath("docker")
 		if err != nil {
-			return Error("%w: unable to locate docker, and this is not a dry run", ErrNoDockerFound)
+			if errors.Is(err, ErrNoDockerFound) {
+				return Error("%w: unable to locate docker, and this is not a dry run", ErrNoDockerFound)
+			}
+			return Error("unexpected error: %w", err)
 		}
 		d.exePath = Path(_path)
 	}
-	return Exec(append([]string{d.exePath.String()}, args...)...).CaptureStdin().Run
+	cmdArgs := append([]string{d.exePath.String()}, args...)
+	sudoPrefix := d.sudoPrefix()
+	if len(sudoPrefix) > 0 {
+		cmdArgs = append([]string{sudoPrefix}, cmdArgs...)
+	}
+	return Exec(cmdArgs...).CaptureStdin().Run
 }
